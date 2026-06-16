@@ -4,6 +4,148 @@ const ZOIDIUM_CUSTOM_EFFECTS = [
   "dropshadow",
   "sepia",
   "polygonecho",
+  "4-color-gradient",
+  "8bit-pixcam",
+  "a_bayangan",
+  "a_glossy",
+  "a_halfdots",
+  "a_innergradation",
+  "a_outline",
+  "a_wiggle",
+  "after-effects-mirror",
+  "az-bend-it",
+  "az-bender",
+  "az-blobbylize",
+  "az-block-load",
+  "az-bubbles",
+  "az-burn-film",
+  "az-cross-blur",
+  "az-cylinder",
+  "az-drizzle",
+  "az-glass",
+  "az-grid-wipe",
+  "az-griddler",
+  "az-hextile",
+  "az-jaws",
+  "az-kaleida",
+  "az-lens",
+  "az-light-burst-25",
+  "az-light-rays",
+  "az-light-sweep",
+  "az-light-wipe",
+  "az-line-sweep",
+  "az-plastic",
+  "az-radial-blur",
+  "az-radial-fast-blur",
+  "az-radial-scalewipe",
+  "az-rainfall",
+  "az-scale-wipe",
+  "az-scatterize",
+  "az-slant",
+  "az-snowfall",
+  "az-split",
+  "az-split-2",
+  "az-threads",
+  "az-threshold",
+  "az-threshold-rgb",
+  "az-tiler",
+  "az-toner",
+  "az-vector-blur",
+  "bcc-ripple-dissolve",
+  "bevel-alpha",
+  "block-dissolve",
+  "brush-strokes",
+  "cartoon",
+  "change-color",
+  "change-to-color",
+  "channel-mixer",
+  "checkerboard",
+  "chromabba",
+  "circle",
+  "color-balance",
+  "color-balance-2",
+  "colorama",
+  "colorvsn",
+  "corner-pin",
+  "curves",
+  "drop-shadow",
+  "echo",
+  "echo-2",
+  "ellipse",
+  "exposure",
+  "fast-box-blur",
+  "fill",
+  "find-edges",
+  "fractal-noise",
+  "gammapedestalgain",
+  "gaussian-blur",
+  "glow",
+  "gradient-ramp",
+  "grid",
+  "hsl-noise",
+  "hsl-noise-auto",
+  "hydrochrome",
+  "impact-lines",
+  "invert",
+  "iris-wipe",
+  "iris-wipe-2",
+  "leave-color",
+  "lens-flare",
+  "levels",
+  "levels-2",
+  "linear-wipe",
+  "lumetri-color",
+  "mangatone",
+  "median",
+  "minimax",
+  "minimax-2",
+  "mosaic",
+  "motion-tile",
+  "mts-pixelsorter",
+  "multislicer",
+  "nesprite",
+  "nisai-stroke",
+  "noise",
+  "optics-compensation",
+  "progradient",
+  "radial-blur",
+  "radial-wipe",
+  "ripple",
+  "s_edgecolorize",
+  "s_glint",
+  "s_glow",
+  "s_halftone",
+  "s_kaleido",
+  "s_kaleidopolar",
+  "s_kaleidoradial",
+  "s_shake",
+  "s_shape",
+  "s_wipeblobs",
+  "s_wipecells",
+  "s_wipedoublewedge",
+  "s_wipefourwedges",
+  "s_wipemoire",
+  "s_wipepixelate",
+  "s_wipeplasma",
+  "s_wipetiles",
+  "s_wipeweave",
+  "scl_film-strip",
+  "simple-choker",
+  "star-trail-motion",
+  "stretch",
+  "texgraph",
+  "threshold",
+  "tint",
+  "transform",
+  "tritone",
+  "turbulent-displace",
+  "turbulent-noise",
+  "twirl",
+  "unmult",
+  "unsharp-mask",
+  "venetian-blinds",
+  "warp",
+  "wave-warp",
 ];
 
 // Extract metadata from the factory source without executing side-effectful code.
@@ -130,15 +272,41 @@ async function loadZoidiumCustomEffect(name) {
   );
 }
 
+// Move MISC's "Group" and "Shader" entries to the very bottom of the effect
+// list. They are scaffolding-only Panzoid internals that don't render anything
+// and are rarely useful in the picker, so we hide them at the end.
+function reorderMiscEffectsToBottom() {
+  const effects = PZ.ui.objectTypes.get(PZ.effect);
+  const lastIndex = effects.length - 1;
+  const moved = [];
+  for (let i = effects.length - 1; i >= 0; i--) {
+    const e = effects[i];
+    if (e && (e.name === "Group" || e.name === "Shader")) {
+      moved.unshift(e);
+      effects.splice(i, 1);
+    }
+  }
+  for (const e of moved) effects.push(e);
+  if (moved.length) {
+    console.log(
+      `[Zoidium] moved ${moved.length} MISC scaffolding entries to the bottom`
+    );
+  }
+}
+
 function initZoidiumCustomEffects() {
   if (typeof PZ === "undefined" || !PZ.effect || !PZ.ui || !PZ.ui.objectTypes) {
     return setTimeout(initZoidiumCustomEffects, 50);
   }
-  for (const name of ZOIDIUM_CUSTOM_EFFECTS) {
+  // loadZoidiumCustomEffect is async (it fetches the .js), so we wait for all
+  // of them to resolve before reordering — otherwise the new AlipFX category
+  // would land below the moved Group/Shader entries.
+  const loads = ZOIDIUM_CUSTOM_EFFECTS.map((name) =>
     loadZoidiumCustomEffect(name).catch((err) =>
       console.error(`[Zoidium] failed to load ${name}:`, err)
-    );
-  }
+    )
+  );
+  Promise.all(loads).then(reorderMiscEffectsToBottom);
 }
 
 initZoidiumCustomEffects();

@@ -6,7 +6,7 @@
 (this.defaultName = "Polygon Echo"),
   (this._zoidiumMeta = {
     category: "ENHANCE",
-    desc: "Draws a striped series of polygons/stars around a center point.",
+    desc: "Draws a striped series of polygons/stars/chevrons around a center point.",
   }),
   (this.shaderfile = "preset/polygonecho"),
   (this.shaderUrl = "/assets/shaders/fragment/" + this.shaderfile + ".glsl"),
@@ -56,7 +56,6 @@
       type: PZ.property.type.NUMBER,
       value: 0,
       min: 0,
-      max: 1,
       step: 0.1,
     },
     Size: {
@@ -64,7 +63,6 @@
       name: "Size",
       type: PZ.property.type.NUMBER,
       value: 20,
-      min: 0,
       max: 100,
       step: 0.1,
     },
@@ -73,7 +71,6 @@
       name: "Size Variation",
       type: PZ.property.type.NUMBER,
       value: 0,
-      min: 0,
       max: 100,
       step: 0.1,
     },

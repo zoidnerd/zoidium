@@ -1,0 +1,1 @@
+precision highp float; precision highp int; uniform sampler2D tDiffuse; varying vec2 vUvScaled; uniform vec3 Color; uniform float Opacity; void main() { vec4 src = texture2D(tDiffuse, vUvScaled); float op = clamp(Opacity / 100.0, 0.0, 1.0); vec3 outRgb = mix(src.rgb, Color, op); gl_FragColor = vec4(outRgb, src.a); }
