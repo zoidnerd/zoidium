@@ -39,7 +39,7 @@
       value: 1,
       min: 0,
       max: 1,
-      step: 0.01,
+      step: 0.1,
     },
     N: {
       dynamic: !0,
@@ -57,7 +57,7 @@
       value: 0,
       min: 0,
       max: 1,
-      step: 0.01,
+      step: 0.1,
     },
     Size: {
       dynamic: !0,
@@ -144,7 +144,7 @@
       value: 1,
       min: 0,
       max: 1,
-      step: 0.01,
+      step: 0.1,
     },
     StripeOffset: {
       dynamic: !0,
