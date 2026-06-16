@@ -112,7 +112,7 @@
     },
     Repeat: {
       dynamic: !0,
-      name: "Repeat (0 = auto)",
+      name: "Repeat",
       type: PZ.property.type.NUMBER,
       value: 0,
       min: 0,
