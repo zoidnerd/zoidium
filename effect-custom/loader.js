@@ -3,6 +3,7 @@
 const ZOIDIUM_CUSTOM_EFFECTS = [
   "dropshadow",
   "sepia",
+  "polygonecho",
 ];
 
 // Extract metadata from the factory source without executing side-effectful code.
