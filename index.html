@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+
+    <link rel="stylesheet" href="./pz.all-35.css" />
+    <link rel="stylesheet" href="./fonts/fonts.css">
+
+    <script src="./js/three.r91.min.js"></script>
+
+    <script>
+      var PZ = {};
+
+      PZ.stringHash = function (str)
+      {
+        var hash = 0, i, chr;
+        if (str.length === 0) return hash;
+        for (i = 0; i < str.length; i++) {
+          chr   = str.charCodeAt(i);
+          hash  = ((hash << 5) - hash) + chr;
+          hash |= 0; // Convert to 32bit integer
+        }
+        return hash;
+      };
+
+      // Telemetry/ads removed for local-only mode.
+      PZ.apiOrigin = "";
+      PZ.blobOrigin = "";
+      PZ.account = { currentUser: null, csrf: null };
+      PZ.account.getCurrent = async function () { return null; };
+      PZ.account.update = async function () { };
+      PZ.api = async function (url, op, body) {
+        return new Response(null, { status: 204 });
+      };
+      PZ.ui = PZ.ui || {};
+      PZ.ui.ad = function(cm) { this.el = document.createElement('div'); this.el.style.display = 'none'; };
+      PZ.ui.ads = {};
+      PZ.ui.ads.init = async function () { this.adsReady = Promise.resolve(); };
+      PZ.ui.ads.show = async function (unit, elId) { return; };
+    </script>
+</head>
+
+<body>
+    <style>
+        /* Hide ad space */
+        #previewtop { display: none !important; }
+
+        /* scrollbars */
+
+         ::-webkit-scrollbar {
+            width: 12px;
+            height: 12px;
+        }
+        
+         ::-webkit-scrollbar-button {
+            display: none;
+        }
+        
+         ::-webkit-scrollbar-track {
+            background-color: #222;
+        }
+        
+         ::-webkit-scrollbar-track-piece {
+            background-color: #222;
+        }
+        
+         ::-webkit-scrollbar-thumb {
+            background-color: #555;
+            /*border: 2px solid #222;*/
+        }
+
+         ::-webkit-scrollbar-corner {
+            background-color: transparent;
+        }
+    </style>
+
+    <div id="panecontainer">
+        <div id="editorpane">
+            <div id="controls"></div>
+            <div id="elevator">
+                <div id="elevatortabs"></div>
+            </div>
+        </div>
+
+        <div id="previewpane">
+            <canvas id="c_main"></canvas>
+            <div id="previewbottom"></div>
+        </div>
+    </div>
+
+    <script src="./js/core-1.0.102.js"></script>
+    <script src="./js/ui-1.0.72.js"></script>
+    <script src="./js/clipmaker-3.0.106.js"></script>
+
+    <script>
+      initTool();
+    </script>
+</body>
+
+</html>
