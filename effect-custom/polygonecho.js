@@ -128,6 +128,13 @@
       max: 50,
       step: 0.1,
     },
+    StripeEnabled: {
+      dynamic: !0,
+      name: "Stripe",
+      type: PZ.property.type.OPTION,
+      value: 1,
+      items: "off;on",
+    },
     StripeWidth: {
       dynamic: !0,
       name: "Stripe Width",
@@ -191,6 +198,7 @@
         RotationStep: { type: "f", value: 0 },
         Repeat: { type: "f", value: 0 },
         Margin: { type: "f", value: -5 },
+        StripeEnabled: { type: "f", value: 1 },
         StripeWidth: { type: "f", value: 5.86 },
         StripeMargin: { type: "f", value: 1 },
         StripeOffset: { type: "f", value: 0 },
@@ -229,6 +237,7 @@
     u.RotationStep.value = this.properties.RotationStep.get(e);
     u.Repeat.value = this.properties.Repeat.get(e);
     u.Margin.value = this.properties.Margin.get(e);
+    u.StripeEnabled.value = this.properties.StripeEnabled.get(e) === 1 ? 1 : 0;
     u.StripeWidth.value = this.properties.StripeWidth.get(e);
     u.StripeMargin.value = this.properties.StripeMargin.get(e);
     u.StripeOffset.value = this.properties.StripeOffset.get(e);

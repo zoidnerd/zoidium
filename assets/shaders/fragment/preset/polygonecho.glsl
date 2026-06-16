@@ -15,6 +15,7 @@ uniform float Rotation;
 uniform float Repeat;
 uniform float Margin;
 uniform float RotationStep;
+uniform float StripeEnabled;
 uniform float StripeWidth;
 uniform float StripeMargin;
 uniform float StripeOffset;
@@ -178,14 +179,19 @@ void main() {
     }
 
     if (isInRing) {
-        float newStripeOffset = StripeOffset + StripeWidth * StripeMargin / 2.0;
-        bool showStripe = fract((rotatedUvForStripe.y + newStripeOffset / 100.0) / (StripeWidth / 100.0)) < StripeMargin;
+        if (StripeEnabled > 0.5) {
+            float newStripeOffset = StripeOffset + StripeWidth * StripeMargin / 2.0;
+            bool showStripe = fract((rotatedUvForStripe.y + newStripeOffset / 100.0) / (StripeWidth / 100.0)) < StripeMargin;
 
-        if (showStripe) {
+            if (showStripe) {
+                vec4 shapeColor = vec4(Color, Opacity);
+                gl_FragColor = blendColors(texel, shapeColor);
+            } else {
+                gl_FragColor = texel;
+            }
+        } else {
             vec4 shapeColor = vec4(Color, Opacity);
             gl_FragColor = blendColors(texel, shapeColor);
-        } else {
-            gl_FragColor = texel;
         }
     } else {
         gl_FragColor = texel;
