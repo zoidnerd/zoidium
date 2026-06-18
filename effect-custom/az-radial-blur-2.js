@@ -2,12 +2,12 @@
 // Source: Radial Blur (AlipFX).txt
 // Reference shader: assets/shaders/fragment/preset/radial-blur.glsl
 
-(this.defaultName = "Radial Blur"),
+(this.defaultName = "AZ Radial Blur 2"),
   (this._zoidiumMeta = {
     category: "AlipFX",
     desc: "Radial zoom or spin blur from a center point.",
   }),
-  (this.shaderfile = "preset/radial-blur"),
+  (this.shaderfile = "preset/az-radial-blur-2"),
   (this.shaderUrl = "/assets/shaders/fragment/" + this.shaderfile + ".glsl"),
   (this.vertShader = this.parentProject.assets.createFromPreset(
     PZ.asset.type.SHADER,

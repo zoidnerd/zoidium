@@ -2,12 +2,12 @@
 // Source: Gaussian Blur (AlipFX).txt
 // Reference shader: assets/shaders/fragment/preset/gaussian-blur.glsl
 
-(this.defaultName = "Gaussian Blur"),
+(this.defaultName = "AZ Gaussian Blur"),
   (this._zoidiumMeta = {
     category: "AlipFX",
     desc: "Smooth Gaussian blur with adjustable direction.",
   }),
-  (this.shaderfile = "preset/gaussian-blur"),
+  (this.shaderfile = "preset/az-gaussian-blur"),
   (this.shaderUrl = "/assets/shaders/fragment/" + this.shaderfile + ".glsl"),
   (this.vertShader = this.parentProject.assets.createFromPreset(
     PZ.asset.type.SHADER,

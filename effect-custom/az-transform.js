@@ -2,12 +2,12 @@
 // Source: Transform (AlipFX).txt
 // Reference shader: assets/shaders/fragment/preset/transform.glsl
 
-(this.defaultName = "Transform"),
+(this.defaultName = "AZ Transform"),
   (this._zoidiumMeta = {
     category: "AlipFX",
     desc: "Full 2D transform with scale, skew, rotation, and opacity.",
   }),
-  (this.shaderfile = "preset/transform"),
+  (this.shaderfile = "preset/az-transform"),
   (this.shaderUrl = "/assets/shaders/fragment/" + this.shaderfile + ".glsl"),
   (this.vertShader = this.parentProject.assets.createFromPreset(
     PZ.asset.type.SHADER,

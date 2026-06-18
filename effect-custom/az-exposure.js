@@ -2,12 +2,12 @@
 // Source: Exposure (AlipFX).txt
 // Reference shader: assets/shaders/fragment/preset/exposure.glsl
 
-(this.defaultName = "Exposure"),
+(this.defaultName = "AZ Exposure"),
   (this._zoidiumMeta = {
     category: "AlipFX",
     desc: "Applies exposure, offset, and gamma per channel or master.",
   }),
-  (this.shaderfile = "preset/exposure"),
+  (this.shaderfile = "preset/az-exposure"),
   (this.shaderUrl = "/assets/shaders/fragment/" + this.shaderfile + ".glsl"),
   (this.vertShader = this.parentProject.assets.createFromPreset(
     PZ.asset.type.SHADER,
