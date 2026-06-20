@@ -1,0 +1,63 @@
+{
+  "name": "Chevron Sync",
+  "desc": "Expression that automates Chevron sync timing with a custom Out-In eased shape plus a linear offset.",
+  "category": "SYNC",
+  "type": 0,
+  "properties": {
+    "name": "ChevSync",
+    "enabled": {
+      "animated": false,
+      "keyframes": [{"value": 1, "frame": 0, "tween": 0, "controlPoints": [[-10, 0], [10, 0]]}]
+    }
+  },
+  "customProperties": [
+    {
+      "type": {"custom": true, "dynamic": true, "type": 0},
+      "properties": {"name": "Sync"},
+      "animated": false,
+      "keyframes": [{"value": 0.5, "frame": 0, "tween": 1, "controlPoints": [[-10, 0], [10, 0]]}]
+    },
+    {
+      "type": {"custom": true, "dynamic": true, "type": 0},
+      "properties": {"name": "Ratio"},
+      "animated": false,
+      "keyframes": [{"value": 0.5, "frame": 0, "tween": 1, "controlPoints": [[-10, 0], [10, 0]]}]
+    },
+    {
+      "type": {"custom": true, "dynamic": true, "type": 0},
+      "properties": {"name": "Power"},
+      "animated": false,
+      "keyframes": [{"value": 3, "frame": 0, "tween": 1, "controlPoints": [[-10, 0], [10, 0]]}]
+    },
+    {
+      "type": {"custom": true, "group": true, "dynamic": true, "type": 1, "objects": [{"dynamic": true, "name": "X", "type": 0, "value": 0}, {"dynamic": true, "name": "Y", "type": 0, "value": 0}]},
+      "properties": {"name": "Amount"},
+      "objects": [
+        {"animated": false, "keyframes": [{"value": 0.2, "frame": 0, "tween": 1, "controlPoints": [[-10, 0], [10, 0]]}]},
+        {"animated": false, "keyframes": [{"value": 0.4, "frame": 0, "tween": 1, "controlPoints": [[-10, 0], [10, 0]]}]}
+      ]
+    }
+  ],
+  "objects": [
+    {
+      "type": 0,
+      "properties": {
+        "name": "Code",
+        "enabled": {
+          "animated": false,
+          "keyframes": [{"value": 1, "frame": 0, "tween": 0, "controlPoints": [[-10, 0], [10, 0]]}]
+        }
+      },
+      "customProperties": [
+        {
+          "type": {"custom": true, "dynamic": true, "type": 0},
+          "properties": {"name": "v"},
+          "animated": true,
+          "expression": "var m = properties[\"Ratio\"];\nvar p = properties[\"Power\"];\nvar s = properties[\"Sync\"];\nvar amount_eased = properties[\"Amount\"][0];\nvar amount_linear = properties[\"Amount\"][1];\n\nvar I = (s >= 0) ? (s - s % 1) : (s - s % 1 - (s % 1 != 0 ? 1 : 0));\nvar s_frac = s - I;\n\nvar EPSILON = 0.000001;\nvar m_is_zero = (m < EPSILON) ? 1 : 0;\nvar m_safe = m * (1 - m_is_zero) + EPSILON * m_is_zero;\nvar m1 = 1 - m;\nvar m1_is_zero = (m1 < EPSILON) ? 1 : 0;\nvar m1_safe = m1 * (1 - m1_is_zero) + EPSILON * m1_is_zero;\n\nvar x1 = s_frac / m_safe;\nvar v1 = (1 - pow(1 - x1, p)) * 0.5;\nvar x2 = (s_frac - m) / m1_safe;\nvar v2 = 0.5 + pow(x2, p) * 0.5;\n\nvar flag1 = (s_frac < m) ? 1 : 0;\nvar flag2 = (s_frac >= m) ? 1 : 0;\nvar E_shape = v1 * flag1 + v2 * flag2;\n\n(I + E_shape) * amount_eased + s * amount_linear;",
+          "keyframes": [{"value": 2.8, "frame": 0, "tween": 1, "controlPoints": [[-10, 0], [10, 0]]}]
+        }
+      ],
+      "objects": []
+    }
+  ]
+}

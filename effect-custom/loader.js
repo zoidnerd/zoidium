@@ -1,5 +1,13 @@
 // Zoidium custom effect loader
 // Add new effect filenames to ZOIDIUM_CUSTOM_EFFECTS below (without .js extension)
+//
+// Two kinds of custom effects are supported:
+//   ZOIDIUM_CUSTOM_EFFECTS  — single-effect factories (shader or JS logic).
+//                             File: effect-custom/<name>.js
+//   ZOIDIUM_CUSTOM_GROUPS   — Group presets (a bundle of sub-effects wired
+//                             together with customProperties + expressions,
+//                             like the stock Panzoid "Twitch" effect).
+//                             File: effect-custom/groups/<name>.json
 const ZOIDIUM_CUSTOM_EFFECTS = [
   "dropshadow",
   "sepia",
@@ -132,6 +140,7 @@ const ZOIDIUM_CUSTOM_EFFECTS = [
   "s_wipeweave",
   "scl_film-strip",
   "simple-choker",
+  "smooth-bevel",
   "star-trail-motion",
   "stretch",
   "texgraph",
@@ -146,6 +155,32 @@ const ZOIDIUM_CUSTOM_EFFECTS = [
   "venetian-blinds",
   "warp",
   "wave-warp",
+];
+
+// Group preset loader list. Add JSON filenames here (without .json extension).
+// The file lives at effect-custom/groups/<name>.json and contains the preset
+// payload that gets passed to PZ.effect.group.load().
+//
+// A preset JSON has the shape:
+//
+//   {
+//     "name": "Twitch",                  // display name in the picker
+//     "desc": "...",                     // hover tooltip
+//     "category": "DISTORT",             // picker category (existing or new)
+//     "type": 0,                         // MUST be 0 (PZ.effect.group)
+//     "properties": {                    // instance-level defaults
+//       "name": "Twitch (beta v1)",
+//       "enabled": { "animated": false, "keyframes": [{"value": 1, "frame": 0, "tween": 1}] }
+//     },
+//     "customProperties": [ ... ],       // user-facing dials (Amount, Speed, ...)
+//     "objects": [ ... ]                 // sub-effects wired with expressions
+//   }
+//
+// The top-level `name` / `desc` / `category` are read by the loader; everything
+// else is forwarded verbatim as `data` to PZ.effect.group.load().
+const ZOIDIUM_CUSTOM_GROUPS = [
+  "chevron-sync",
+  "sync",
 ];
 
 // Extract metadata from the factory source without executing side-effectful code.
@@ -200,18 +235,31 @@ function extractMeta(code) {
 // Panzoid's effect list schema:
 //   - Category header: { name: "COLOR", category: true }
 //   - Effect entry:    { name: "Sepia", desc: "...", type: "sepia" }
+//   - Group preset:    { name: "Twitch", desc: "...", type: 0, data: {...} }
+//
+// De-dup strategy:
+//   - Shader/JS effects: by `type` (the unique filename string)
+//   - Group presets: by `_zoidiumKey` (the JSON filename), since multiple
+//     group presets all share `type: 0` and would otherwise collide
 function insertCustomEffectEntry(effects, entry) {
   const category = entry._zoidiumCategory;
 
-  // De-dupe by type
-  if (effects.find((e) => e.type === entry.type)) return;
+  // De-dupe: group presets carry `_zoidiumKey`; factory effects fall back to type
+  if (entry._zoidiumKey) {
+    if (effects.find((e) => e._zoidiumKey === entry._zoidiumKey)) return;
+  } else {
+    if (effects.find((e) => e.type === entry.type)) return;
+  }
 
-  // Strip the internal field before pushing so Panzoid doesn't misread it
+  // Strip internal fields before pushing. Group presets need `data` preserved
+  // because the picker reads entry.data and passes it to PZ.effect.group.load().
   const cleanEntry = {
     name: entry.name,
     desc: entry.desc,
     type: entry.type,
   };
+  if (entry.data !== undefined) cleanEntry.data = entry.data;
+  if (entry._zoidiumKey) cleanEntry._zoidiumKey = entry._zoidiumKey;
 
   if (!category) {
     effects.push(cleanEntry);
@@ -272,21 +320,81 @@ async function loadZoidiumCustomEffect(name) {
   );
 }
 
-// Move MISC's "Group" and "Shader" entries to the very bottom of the effect
-// list. They are scaffolding-only Panzoid internals that don't render anything
-// and are rarely useful in the picker, so we hide them at the end.
+// Load a Group preset (a PZ.effect.group with predefined customProperties +
+// sub-effects, like the stock Panzoid "Twitch"). The JSON file lives at
+// effect-custom/groups/<name>.json and is consumed as-is by Panzoid's
+// built-in Group class via its `load(data)` method — no factory needed.
+async function loadZoidiumCustomGroup(name) {
+  // 1. Fetch and parse the preset JSON
+  const url = `./effect-custom/groups/${name}.json`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`HTTP ${res.status} fetching ${url}`);
+  const preset = await res.json();
+
+  // 2. Validate the minimum required shape
+  if (preset.type !== 0) {
+    throw new Error(
+      `Group preset "${name}" must have "type": 0 (PZ.effect.group), got ${preset.type}`
+    );
+  }
+  if (!preset.name) {
+    throw new Error(`Group preset "${name}" is missing required "name" field`);
+  }
+  if (!Array.isArray(preset.objects)) {
+    throw new Error(
+      `Group preset "${name}" is missing required "objects" array`
+    );
+  }
+
+  // 3. Pull display metadata out of the JSON before forwarding the rest to Panzoid.
+  //    Anything not in {name, desc, category} is treated as the Group `data` payload.
+  const displayName = preset.name;
+  const desc = preset.desc || "Custom group preset (Zoidium)";
+  const category = preset.category || null;
+  const { name: _n, desc: _d, category: _c, ...data } = preset;
+
+  // 4. Register the UI entry. The picker reads `entry.data` and passes it to
+  //    PZ.effect.group.load(), which consumes `properties`, `customProperties`,
+  //    and `objects` to populate the Group instance.
+  const effects = PZ.ui.objectTypes.get(PZ.effect);
+  insertCustomEffectEntry(effects, {
+    name: displayName,
+    desc,
+    type: 0,
+    data,
+    _zoidiumCategory: category,
+    _zoidiumKey: name,
+  });
+
+  console.log(
+    `[Zoidium] loaded custom group preset: ${displayName} (${name})` +
+      (category ? ` [${category}]` : "")
+  );
+}
+
+// Move the entire MISC section (category header + Group + Shader entries)
+// to the very bottom of the effect list. Panzoid ships MISC last by default,
+// but custom categories inserted after initTool() land after it — leaving
+// the MISC header orphaned mid-list with Group/Shader pulled to the very
+// end. Relocating the whole section keeps them visually grouped at the
+// bottom of the picker.
 function reorderMiscEffectsToBottom() {
   const effects = PZ.ui.objectTypes.get(PZ.effect);
-  const lastIndex = effects.length - 1;
-  const moved = [];
-  for (let i = effects.length - 1; i >= 0; i--) {
-    const e = effects[i];
-    if (e && (e.name === "Group" || e.name === "Shader")) {
-      moved.unshift(e);
-      effects.splice(i, 1);
+  const miscIdx = effects.findIndex(
+    (e) => e && e.category === true && e.name === "MISC"
+  );
+  if (miscIdx < 0) return;
+
+  let endIdx = effects.length;
+  for (let i = miscIdx + 1; i < effects.length; i++) {
+    if (effects[i] && effects[i].category === true) {
+      endIdx = i;
+      break;
     }
   }
-  for (const e of moved) effects.push(e);
+
+  const moved = effects.splice(miscIdx, endIdx - miscIdx);
+  effects.push(...moved);
   if (moved.length) {
     console.log(
       `[Zoidium] moved ${moved.length} MISC scaffolding entries to the bottom`
@@ -298,15 +406,22 @@ function initZoidiumCustomEffects() {
   if (typeof PZ === "undefined" || !PZ.effect || !PZ.ui || !PZ.ui.objectTypes) {
     return setTimeout(initZoidiumCustomEffects, 50);
   }
-  // loadZoidiumCustomEffect is async (it fetches the .js), so we wait for all
-  // of them to resolve before reordering — otherwise the new AlipFX category
-  // would land below the moved Group/Shader entries.
-  const loads = ZOIDIUM_CUSTOM_EFFECTS.map((name) =>
+  // Both loaders are async (they fetch files), so we wait for all of them
+  // to resolve before reordering — otherwise new categories would land below
+  // the moved Group/Shader entries.
+  const effectLoads = ZOIDIUM_CUSTOM_EFFECTS.map((name) =>
     loadZoidiumCustomEffect(name).catch((err) =>
-      console.error(`[Zoidium] failed to load ${name}:`, err)
+      console.error(`[Zoidium] failed to load effect ${name}:`, err)
     )
   );
-  Promise.all(loads).then(reorderMiscEffectsToBottom);
+  const groupLoads = ZOIDIUM_CUSTOM_GROUPS.map((name) =>
+    loadZoidiumCustomGroup(name).catch((err) =>
+      console.error(`[Zoidium] failed to load group preset ${name}:`, err)
+    )
+  );
+  Promise.all([...effectLoads, ...groupLoads]).then(
+    reorderMiscEffectsToBottom
+  );
 }
 
 initZoidiumCustomEffects();

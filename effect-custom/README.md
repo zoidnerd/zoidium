@@ -2,12 +2,13 @@
 
 開発者がカスタムエフェクトを追加するためのディレクトリ。 既存の Panzoid ランタイムは触らず、 `loader.js` に1行追加するだけで UI の Effects パネルに新エフェクトが並ぶ。 エンドユーザーはそれを検索してシーケンスにドロップする。
 
-Zoidium は **2 種類のカスタムエフェクト** をサポートする:
+Zoidium は **3 種類のカスタムエフェクト** をサポートする:
 
 | 種類 | 使う場面 | 開発者が書くもの |
 |---|---|---|
 | **GLSL プリセット** | 1本のフラグメントシェーダで完結する画像処理（色調補正、ぼかし、トゥーン、etc） | シェーダファイル 1 本 + ファクトリ JS 1 本 |
 | **JS ロジック** | 複数パス、追加レンダーターゲット、影 / マスク生成などの重い処理 | dropshadow.js のような複雑な JS（シェーダ 1 本以上） |
+| **Group プリセット** | Panzoid 純正 Twitch のような「子エフェクト束ね + 式で連動」コンテナ | `effect-custom/groups/<name>.json` 1 本 |
 
 ---
 
@@ -71,6 +72,35 @@ Zoidium は **2 種類のカスタムエフェクト** をサポートする:
 
 具体例: [`dropshadow.js`](./dropshadow.js) — boxblur シェーダで影を生成し、 合成パスでオリジナル下に重ねる。 カテゴリ "ENHANCE" に入る。
 
+### タイプ C: Group プリセット
+
+Panzoid 純正の **Group 効果** (`type: 0`) と同じ仕組みで、 複数の子エフェクトを
+**共有の customProperties + JavaScript 式** で連動させるコンテナ。 1 つのダイヤルで
+配下を一斉にコントロールしたい場合 (例: Twitch の Amount) に使う。
+
+1. **JSON を作る**:
+   ```bash
+   # effect-custom/groups/my-preset.json を作成
+   ```
+   最小構成は `{name, desc, category, type:0, properties, customProperties, objects}`。
+   詳細は [`groups/README.md`](./groups/README.md) を参照。
+
+2. **`loader.js` に登録**:
+   ```js
+   const ZOIDIUM_CUSTOM_GROUPS = [
+     "my-preset",
+   ];
+   ```
+
+3. リロード → Effects パネルに "My Preset" が現れる。
+
+具体構造の参考: [`groups/README.md`](./groups/README.md) 内の「仕組み (参考: 純正 Twitch)」
+セクションに Twitch の簡略 JSON を載せている。
+
+> **シェーダ単体で 1 本に収まるエフェクトはタイプ A/B を使おう。** Group プリセットは
+> 「複数の既存エフェクトを式つなぎで束ねる」用途専用。 1 つのシェーダで書けるものを
+> Group 化すると、 親 dial を 1 つ介す分だけ自由度が落ちる (配下を個別編集はできるが)。
+
 ---
 
 ## 仕組み
@@ -93,12 +123,15 @@ Zoidium は **2 種類のカスタムエフェクト** をサポートする:
 ```
 effect-custom/
 ├── README.md              # このファイル
-├── loader.js              # エントリ。 ZOIDIUM_CUSTOM_EFFECTS 配列を編集
+├── loader.js              # エントリ。 ZOIDIUM_CUSTOM_EFFECTS / ZOIDIUM_CUSTOM_GROUPS 配列を編集
 ├── _template_shader.js    # 雛形: GLSL プリセット
 ├── _template_advanced.js  # 雛形: JS ロジック
 ├── _template.glsl         # 雛形: GLSL フラグメントシェーダ
 ├── dropshadow.js          # 例: JS ロジック（AfterClip から移植）
-└── sepia.js               # 例: GLSL プリセット
+├── sepia.js               # 例: GLSL プリセット
+└── groups/                # Group プリセット置き場 (各ファイルが 1 プリセット)
+    ├── README.md          # 書き方ガイド
+    └── *.json             # プリセット定義
 
 assets/shaders/fragment/
 ├── fx_*.glsl              # 既存 Panzoid シェーダ
@@ -156,3 +189,8 @@ A. ファクトリの `this._zoidiumMeta = { category, desc }` で指定する:
 
 **Q. シェーダだけじゃ完結しないエフェクトは？**
 A. タイプ B の JS ロジックを使う。 必要なら `THREE.WebGLRenderTarget` を 2 つ作ってマルチパスに。
+
+**Q. 複数の既存エフェクトを 1 つのダイヤルで連動させたい (Twitch のような)**
+A. タイプ C の Group プリセットを使う。 `effect-custom/groups/<name>.json` に
+   `customProperties` + `objects` を書き、 各 object のプロパティに JavaScript 式を
+   書くと式評価器が毎フレーム配下に値を流す。 詳細は [`groups/README.md`](./groups/README.md)。
