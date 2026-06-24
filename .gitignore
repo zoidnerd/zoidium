@@ -34,3 +34,6 @@ _headers
 
 # Raw Panzoid creation downloads (source of group preset conversions)
 /sync.json
+
+# Headless export CLI scratch space (temporary .pz copies)
+/download/_tmp/

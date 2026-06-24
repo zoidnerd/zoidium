@@ -7,7 +7,8 @@
     "start": "electron .",
     "web": "npx serve . -p 8123",
     "dev": "npx serve . -p 8123 & sleep 1 && open http://localhost:8123",
-    "dist": "electron-builder"
+    "dist": "electron-builder",
+    "export": "node tools/headless-export/cli.mjs"
   },
   "build": {
     "appId": "com.zoidium.app",

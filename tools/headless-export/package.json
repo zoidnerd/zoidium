@@ -1,0 +1,17 @@
+{
+  "name": "zoidium-headless-export",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Headless frame-by-frame renderer for Zoidium (Panzoid Clipmaker offline mirror). Bypasses the in-browser WASM encoder to avoid FPS drops caused by heavy VP8/VP9 encoding.",
+  "scripts": {
+    "start": "node cli.mjs",
+    "export": "node cli.mjs"
+  },
+  "dependencies": {
+    "playwright": "^1.49.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
