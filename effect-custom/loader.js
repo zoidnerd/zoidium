@@ -409,6 +409,79 @@ async function loadZoidiumCustomGroup(name) {
 // the MISC header orphaned mid-list with Group/Shader pulled to the very
 // end. Relocating the whole section keeps them visually grouped at the
 // bottom of the picker.
+// Zoidium extension: replace PZ.object3d.particles.prototype.randomize with a
+// fixed-state initializer. Panzoid's stock randomize() generates a unique
+// particle system every time (random color, count, rate, spread, blending,
+// texture, etc.), which makes "the same particle look" impossible to
+// reproduce. We override it to produce a deterministic reset state every
+// call — matching the JSON shape Panzoid serializes for an empty, un-edited
+// particle object.
+//
+// This is the default state the user gets when they add a new Particles
+// object to the scene. Users can still tweak every property afterward; this
+// only affects the initial values.
+function applyZoidiumParticleReset() {
+  if (
+    typeof PZ === "undefined" ||
+    !PZ.object3d ||
+    !PZ.object3d.particles ||
+    !PZ.object3d.particles.prototype
+  ) {
+    return false;
+  }
+  const proto = PZ.object3d.particles.prototype;
+  if (proto._zoidiumResetApplied) return true;
+  proto._zoidiumResetApplied = true;
+
+  proto.randomize = function () {
+    const e = this.properties;
+
+    e.name.set("Particles");
+
+    e.time.load({
+      expression: "time",
+      animated: "time",
+      keyframes: [
+        {
+          value: 0,
+          frame: 0,
+          tween: 1,
+          controlPoints: [
+            [-10, 0],
+            [10, 0],
+          ],
+        },
+      ],
+    });
+
+    e.color.set([{ position: 0, color: "rgba(255,255,255,1.0)" }]);
+    e.size.set([{ position: 0, color: "rgba(255,255,255,1.0)" }]);
+
+    e.number.set(0);
+    e.rate.set(0);
+    e.lifetime.set(0);
+    e.pdist.set(0);
+    e.ipos.set([0, 0, 0]);
+    e.pspread.set([1, 1, 1]);
+    e.iradius.set(0);
+    e.rspread.set(0);
+    e.vdist.set(0);
+    e.ivel.set([0, 0, 0]);
+    e.vspread.set([0, 0, 0]);
+    e.irvel.set(0);
+    e.rvspread.set(0);
+    e.accel.set([0, 0, 0]);
+    e.iang.set(0);
+    e.aspread.set(0);
+    e.angvel.set(0);
+    e.avspread.set(0);
+    e.blending.set(0);
+    // texture is left at null (Panzoid's own default).
+  };
+  console.log("[Zoidium] particles.randomize() replaced with reset state");
+  return true;
+}
+
 function reorderMiscEffectsToBottom() {
   const effects = PZ.ui.objectTypes.get(PZ.effect);
   const miscIdx = effects.findIndex(
@@ -437,6 +510,7 @@ function initZoidiumCustomEffects() {
   if (typeof PZ === "undefined" || !PZ.effect || !PZ.ui || !PZ.ui.objectTypes) {
     return setTimeout(initZoidiumCustomEffects, 50);
   }
+  applyZoidiumParticleReset();
   // Both loaders are async (they fetch files), so we wait for all of them
   // to resolve before reordering — otherwise new categories would land below
   // the moved Group/Shader entries.
