@@ -34,3 +34,6 @@ _headers
 
 # Raw Panzoid creation downloads (source of group preset conversions)
 /sync.json
+
+# Electron download flow temp files
+download/_tmp/
